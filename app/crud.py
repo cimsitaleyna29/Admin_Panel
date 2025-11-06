@@ -76,7 +76,12 @@ def update_user(db: Session, user_id: int, user: schemas.UserUpdate):
     # Role veya aktiflik güncellemesi (sadece admin tarafından yapılabilir)
     if user.role is not None:
         db_user.role = user.role
-   
+    
+    db_user.name = user.name
+    db_user.surname =user.surname
+    db_user.email= user.email
+    db_user.phone= user.phone
+    
     db.commit()
     db.refresh(db_user)
     return db_user

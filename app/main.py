@@ -192,3 +192,6 @@ def login(form_data: schemas.UserLogin, db: Session = Depends(get_db)):
 
 if __name__ == "_main_":
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+    

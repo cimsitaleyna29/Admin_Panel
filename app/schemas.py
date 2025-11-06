@@ -10,10 +10,10 @@ class UserBase(BaseModel):
 
 # Yeni kullanıcı oluşturma
 class UserCreate(UserBase):
-    password: str
+    password: str                  #frontend butonu eklenecek
 
 # Güncelleme (opsiyonel alanlar)
-class UserUpdate(BaseModel):
+class UserUpdate(UserBase):
     role: str | None = None
 
 # Giriş için
@@ -28,5 +28,6 @@ class UserResponse(UserBase):
     is_active: bool
 
     model_config = ConfigDict(from_attributes=True)
+
 
 

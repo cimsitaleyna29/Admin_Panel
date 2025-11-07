@@ -192,6 +192,18 @@
   color: #111827;
 }
 
+.user-action-salary {
+  background-color: #0f766e;
+  color: #ffffff;
+  border-color: #0f766e;
+}
+
+.user-action-salary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(15, 118, 110, 0.25);
+  background-color: #115e59;
+}
+
 .dashboard-form-modal {
   margin-top: 2rem;
 }

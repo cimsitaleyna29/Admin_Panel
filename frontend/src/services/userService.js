@@ -5,6 +5,8 @@ const API_BASE_URL =
 
 let activeToken = null;
 
+const TOKEN_KEY = "access_token";
+
 const api = axios.create({
   baseURL: API_BASE_URL
 });
@@ -16,6 +18,26 @@ const setAuthHeader = (token) => {
   } else {
     delete api.defaults.headers.common.Authorization;
   }
+  persistToken(token);
+};
+
+const persistToken = (token) => {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return;
+  }
+  if (token) {
+    window.localStorage.setItem(TOKEN_KEY, token);
+  } else {
+    window.localStorage.removeItem(TOKEN_KEY);
+  }
+};
+
+const readStoredToken = () => {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return null;
+  }
+  const stored = window.localStorage.getItem(TOKEN_KEY);
+  return stored || null;
 };
 
 export const getUsers = async () => {
@@ -31,7 +53,7 @@ export const loginUser = async ({ email, password }) => {
 
   const { access_token: accessToken, token_type: tokenType } = response.data;
   if (!accessToken) {
-    throw new Error("Gecersiz giris yaniti alindi.");
+    throw new Error("Geçersiz giriş yanıtı alındı.");
   }
 
   setAuthHeader(accessToken);
@@ -61,11 +83,31 @@ export const deleteUser = async (id) => {
   await api.delete(`/users/${id}`);
 };
 
+export const setUserSalary = async (userId, salary) => {
+  const token = readStoredToken();
+  if (!token) {
+    throw new Error("Oturum belirteci bulunamadı.");
+  }
+  const response = await api.post(
+    `/users/${userId}/salary`,
+    {
+      salary
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+  return response.data;
+};
+
 export default {
   getUsers,
   loginUser,
   createUser,
   updateUser,
   deleteUser,
-  clearSession
+  clearSession,
+  setUserSalary
 };

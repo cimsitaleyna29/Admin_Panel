@@ -1,9 +1,18 @@
-const UserList = ({ users, loading, onEdit, onDelete, onRole }) => {
+const UserList = ({
+  users,
+  loading,
+  onEdit,
+  onDelete,
+  onRole,
+  onSalary,
+  showRoleAction = true,
+  showSalaryAction = true
+}) => {
   if (loading && users.length === 0) {
     return (
       <div className="user-table-loading">
         <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Yukleniyor...</span>
+          <span className="visually-hidden">Yükleniyor...</span>
         </div>
       </div>
     );
@@ -12,7 +21,7 @@ const UserList = ({ users, loading, onEdit, onDelete, onRole }) => {
   if (!loading && users.length === 0) {
     return (
       <p className="user-table-empty">
-        Henuz kayitli kullanici bulunmuyor.
+        Henüz kayıtlı kullanıcı bulunmuyor.
       </p>
     );
   }
@@ -26,7 +35,7 @@ const UserList = ({ users, loading, onEdit, onDelete, onRole }) => {
           <th scope="col">Soyad</th>
           <th scope="col">E-posta</th>
           <th scope="col">Telefon</th>
-          <th scope="col">Islemler</th>
+          <th scope="col">İşlemler</th>
         </tr>
       </thead>
       <tbody>
@@ -43,14 +52,24 @@ const UserList = ({ users, loading, onEdit, onDelete, onRole }) => {
                   className="user-action user-action-edit"
                   onClick={() => onEdit(user)}
                 >
-                  Duzenle
+                  Düzenle
                 </button>
-                <button
-                  className="user-action user-action-role"
-                  onClick={() => onRole && onRole(user)}
-                >
-                  Rol Ekle
-                </button>
+                {showRoleAction && onRole && (
+                  <button
+                    className="user-action user-action-role"
+                    onClick={() => onRole(user)}
+                  >
+                    Rol Ekle
+                  </button>
+                )}
+                {showSalaryAction && onSalary && (
+                  <button
+                    className="user-action user-action-salary"
+                    onClick={() => onSalary(user)}
+                  >
+                    Maaş Bilgisi
+                  </button>
+                )}
                 <button
                   className="user-action user-action-delete"
                   onClick={() => onDelete(user.id)}

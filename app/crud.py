@@ -123,3 +123,32 @@ def update_user_role(db: Session, user_id: int, new_role: str):
     db.commit()
     db.refresh(db_user)
     return db_user
+
+# USER DETAİLS (Maaş Bilgisi İşlemleri)
+
+def create_or_update_user_details(db: Session, user_id: int, salary: float):
+    """
+    Belirli bir kullanıcının maaş bilgisini ekler veya günceller.
+    Eğer maaş bilgisi yoksa yeni kayıt oluşturur.
+    """
+    user_details = db.query(models.UserDetails).filter(models.UserDetails.user_id == user_id).first()
+
+    if user_details:
+        # Güncelleme
+        user_details.salary = salary
+    else:
+        # Yeni kayıt oluşturma
+        user_details = models.UserDetails(user_id=user_id, salary=salary)
+        db.add(user_details)
+
+    db.commit()
+    db.refresh(user_details)
+    return user_details
+
+
+def get_user_details(db: Session, user_id: int):
+    """
+    Belirli bir kullanıcının maaş bilgisini döndürür.
+    """
+    return db.query(models.UserDetails).filter(models.UserDetails.user_id == user_id).first()
+

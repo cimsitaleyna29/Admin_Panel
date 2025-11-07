@@ -18,9 +18,7 @@ const UserForm = ({
   useEffect(() => {
     setForm({
       ...initialData,
-      ...(showRoleField && !initialData.role
-        ? { role: roleOptions[0] }
-        : {})
+      ...(showRoleField && !initialData.role ? { role: roleOptions[0] } : {})
     });
   }, [initialData, showRoleField, roleOptions]);
 
@@ -43,9 +41,7 @@ const UserForm = ({
       event.stopPropagation();
     }
     const payload =
-      showRoleField && form.role
-        ? { role: form.role }
-        : { ...form };
+      showRoleField && form.role ? { role: form.role } : { ...form };
     await onSubmit(payload);
   };
 
@@ -53,7 +49,7 @@ const UserForm = ({
     <div className="card mt-4">
       <div className="card-body">
         <h3 className="h5 mb-3">
-          {title || (isEditing ? "Kullaniciyi Guncelle" : "Yeni Kullanici")}
+          {title || (isEditing ? "Kullanıcıyı Güncelle" : "Yeni Kullanıcı")}
         </h3>
         <form onSubmit={handleSubmit}>
           <div className="row g-3">
@@ -66,7 +62,7 @@ const UserForm = ({
                 name="name"
                 type="text"
                 className="form-control"
-                value={form.name}
+                value={form.name || ""}
                 onChange={handleChange}
                 required
                 disabled={loading || showRoleField}
@@ -82,7 +78,7 @@ const UserForm = ({
                 name="surname"
                 type="text"
                 className="form-control"
-                value={form.surname}
+                value={form.surname || ""}
                 onChange={handleChange}
                 required
                 disabled={loading || showRoleField}
@@ -98,7 +94,7 @@ const UserForm = ({
                 name="email"
                 type="email"
                 className="form-control"
-                value={form.email}
+                value={form.email || ""}
                 onChange={handleChange}
                 required
                 disabled={loading || showRoleField}
@@ -121,6 +117,23 @@ const UserForm = ({
                 placeholder="(Opsiyonel)"
               />
             </div>
+            {!isEditing && !showRoleField && (
+              <div className="col-md-6">
+                <label htmlFor="password" className="form-label">
+                  Şifre
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  className="form-control"
+                  value={form.password || ""}
+                  onChange={handleChange}
+                  required
+                  disabled={loading}
+                />
+              </div>
+            )}
             {showRoleField && (
               <div className="col-md-6">
                 <label htmlFor="role" className="form-label">
@@ -151,7 +164,7 @@ const UserForm = ({
               onClick={onCancel}
               disabled={loading}
             >
-              Iptal
+              İptal
             </button>
             <button
               type="button"

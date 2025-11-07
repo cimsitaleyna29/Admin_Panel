@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import Login from "./components/Login";
 import Navbar from "./components/Navbar";
 import UserForm from "./components/UserForm";
+import SalaryForm from "./components/SalaryForm";
 import UserList from "./components/UserList";
 import {
   clearSession,
@@ -10,6 +11,7 @@ import {
   deleteUser,
   getUsers,
   loginUser,
+  setUserSalary,
   updateUser
 } from "./services/userService";
 
@@ -36,13 +38,45 @@ const emptyForm = {
   surname: "",
   email: "",
   phone: "",
-  role: "user"
+  role: "user",
+  password: ""
 };
 
 const FORM_MODES = {
   CREATE: "create",
   EDIT: "edit",
-  ROLE: "role"
+  ROLE: "role",
+  SALARY: "salary"
+};
+
+const decodeJwtPayload = (token) => {
+  if (!token) {
+    return null;
+  }
+  const segments = token.split(".");
+  if (segments.length < 2) {
+    return null;
+  }
+  const base64Url = segments[1];
+  const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+  const padding = "=".repeat((4 - (base64.length % 4 || 4)) % 4);
+  const padded = `${base64}${padding}`;
+  if (typeof atob !== "function") {
+    console.error("atob not available in this environment");
+    return null;
+  }
+  try {
+    const binary = atob(padded);
+    const json = decodeURIComponent(
+      Array.from(binary)
+        .map((char) => `%${char.charCodeAt(0).toString(16).padStart(2, "0")}`)
+        .join("")
+    );
+    return JSON.parse(json);
+  } catch (err) {
+    console.error("Token decode failed", err);
+    return null;
+  }
 };
 
 const App = () => {
@@ -73,7 +107,7 @@ const App = () => {
       } catch (err) {
         setError(
           err.response?.data?.detail ||
-            "Kullanici listesi getirilirken hata olustu."
+            "Kullanıcı listesi getirilirken hata oluştu."
         );
       } finally {
         setLoading(false);
@@ -86,7 +120,7 @@ const App = () => {
     const trimmedEmail = email.trim();
     const trimmedPassword = password.trim();
     if (!trimmedEmail || !trimmedPassword) {
-      setError("E-posta ve sifre zorunludur.");
+      setError("E-posta ve şifre zorunludur.");
       return false;
     }
     setError("");
@@ -103,11 +137,13 @@ const App = () => {
       const matchedUser = list.find(
         (user) => user.email.toLowerCase() === normalizedEmail.toLowerCase()
       );
+      const tokenPayload = decodeJwtPayload(authenticated.accessToken);
+      const roleFromToken = tokenPayload?.role ?? matchedUser?.role ?? "user";
       setCurrentUser({
         ...authenticated,
-        name: matchedUser?.name || "Yonetici",
+        name: matchedUser?.name || "Yönetici",
         surname: matchedUser?.surname,
-        role: matchedUser?.role,
+        role: roleFromToken,
         email: trimmedEmail
       });
       setSuccess("");
@@ -116,11 +152,11 @@ const App = () => {
     } catch (err) {
       const status = err.response?.status;
       if (status === 404) {
-        setError("Girilen bilgi hatali. Lutfen e-posta ve sifre bilgilerini kontrol edin.");
+        setError("Girilen bilgi hatalı. Lütfen e-posta ve şifre bilgilerini kontrol edin.");
       } else {
         setError(
           err.response?.data?.detail ||
-            "Giris sirasinda bir hata olustu. Lutfen tekrar deneyin."
+            "Giriş sırasında bir hata oluştu. Lütfen tekrar deneyin."
         );
       }
       return false;
@@ -161,7 +197,8 @@ const App = () => {
         surname: user.surname,
         email: user.email,
         phone: user.phone || "",
-        role: user.role || "user"
+        role: user.role || "user",
+        password: ""
       },
       mode: FORM_MODES.EDIT,
       id: user.id
@@ -175,9 +212,24 @@ const App = () => {
         surname: user.surname,
         email: user.email,
         phone: user.phone || "",
-        role: user.role || "user"
+        role: user.role || "user",
+        password: ""
       },
       mode: FORM_MODES.ROLE,
+      id: user.id
+    });
+  };
+
+  const handleSalaryForm = (user) => {
+    openForm({
+      data: {
+        name: user.name,
+        surname: user.surname,
+        email: user.email,
+        phone: user.phone || "",
+        salary: user.salary ?? ""
+      },
+      mode: FORM_MODES.SALARY,
       id: user.id
     });
   };
@@ -188,14 +240,21 @@ const App = () => {
     setSuccess("");
     try {
       if (formMode === FORM_MODES.CREATE) {
-        await createUser(values);
-        setSuccess("Yeni kullanici olusturuldu.");
+        const trimmedPassword = values.password?.trim();
+        if (!trimmedPassword) {
+          setError("Şifre zorunludur.");
+          return;
+        }
+        const payload = { ...values, password: trimmedPassword };
+        await createUser(payload);
+        setSuccess("Yeni kullanıcı oluşturuldu.");
       } else if (editingId) {
-        await updateUser(editingId, values);
+        const { password: _unusedPassword, ...payload } = values;
+        await updateUser(editingId, payload);
         setSuccess(
           formMode === FORM_MODES.ROLE
-            ? "Kullanici rolu guncellendi."
-            : "Kullanici guncellendi."
+            ? "Kullanıcı rolü güncellendi."
+            : "Kullanıcı güncellendi."
         );
       }
       const list = await getUsers();
@@ -207,7 +266,7 @@ const App = () => {
     } catch (err) {
       setError(
         err.response?.data?.detail ||
-          "Kullanici kaydedilirken bir hata olustu."
+          "Kullanıcı kaydedilirken bir hata oluştu."
       );
     } finally {
       setLoading(false);
@@ -215,7 +274,7 @@ const App = () => {
   };
 
   const handleDelete = async (id) => {
-    const confirmation = window.confirm("Bu kullanici silinsin mi?");
+    const confirmation = window.confirm("Bu kullanıcı silinsin mi?");
     if (!confirmation) {
       return;
     }
@@ -226,12 +285,42 @@ const App = () => {
       await deleteUser(id);
       const list = await getUsers();
       setUsers(list);
-      setSuccess("Kullanici silindi.");
+      setSuccess("Kullanıcı silindi.");
     } catch (err) {
       setError(
         err.response?.data?.detail ||
-          "Kullanici silinirken bir hata olustu."
+          "Kullanıcı silinirken bir hata oluştu."
       );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSalarySubmit = async (salaryInput) => {
+    if (!editingId) {
+      return;
+    }
+    const numericSalary = Number(String(salaryInput).replace(",", "."));
+    if (Number.isNaN(numericSalary)) {
+      setError("Hata oluştu: Maaş değeri sayısal olmalıdır.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    setSuccess("");
+    try {
+      await setUserSalary(editingId, numericSalary);
+      setSuccess("Maaş bilgisi kaydedildi.");
+      setFormVisible(false);
+      setEditingId(null);
+      setFormData({ ...emptyForm });
+      setFormMode(FORM_MODES.CREATE);
+    } catch (err) {
+      const detail =
+        err.response?.data?.detail ||
+        err.message ||
+        "Maaş bilgisi güncellenirken bir hata oluştu.";
+      setError(`Hata oluştu: ${detail}`);
     } finally {
       setLoading(false);
     }
@@ -272,16 +361,23 @@ const App = () => {
   const feedbackElement = renderFeedback();
   const isCreateMode = formMode === FORM_MODES.CREATE;
   const isRoleMode = formMode === FORM_MODES.ROLE;
+  const isSalaryMode = formMode === FORM_MODES.SALARY;
   const formTitle = isCreateMode
-    ? "Yeni Kullanici"
+    ? "Yeni Kullanıcı"
     : isRoleMode
-    ? "Kullanici Rolu Guncelle"
-    : "Kullaniciyi Guncelle";
+    ? "Kullanıcı Rolü Güncelle"
+    : isSalaryMode
+    ? "Kullanıcı Maaş Bilgisi"
+    : "Kullanıcıyı Güncelle";
   const formSubmitLabel = isCreateMode
     ? "Kaydet"
     : isRoleMode
     ? "Rol Kaydet"
-    : "Guncelle";
+    : isSalaryMode
+    ? "Maaş Kaydet"
+    : "Güncelle";
+  const canManageRoles = currentUser?.role === "admin";
+  const canManageSalary = currentUser?.role === "admin";
 
   return (
     <div>
@@ -317,13 +413,13 @@ const App = () => {
                     <div className="dashboard-card-header">
                       <div>
                         <h2 className="dashboard-card-title">
-                          Kullanici Listesi
+                          Kullanıcı Listesi
                         </h2>
                         <div className="dashboard-meta">
-                          <span>Toplam {users.length} kayitli kullanici</span>
+                          <span>Toplam {users.length} kayıtlı kullanıcı</span>
                           {currentUser?.email && (
                             <span>
-                              Yonetici girisi: {currentUser.name} (
+                              Yönetici girişi: {currentUser.name} (
                               {currentUser.email})
                             </span>
                           )}
@@ -340,7 +436,7 @@ const App = () => {
                           className="dashboard-primary"
                           onClick={handleCreateUserForm}
                         >
-                          Yeni Kullanici
+                          Yeni Kullanıcı
                         </button>
                       </div>
                     </div>
@@ -354,27 +450,46 @@ const App = () => {
                         users={users}
                         loading={loading}
                         onEdit={handleEditUserForm}
-                        onRole={handleRoleForm}
+                        onRole={canManageRoles ? handleRoleForm : undefined}
+                        showRoleAction={canManageRoles}
                         onDelete={handleDelete}
+                        onSalary={canManageSalary ? handleSalaryForm : undefined}
+                        showSalaryAction={canManageSalary}
                       />
                     </div>
                     {formVisible && (
                       <div className="dashboard-form-modal" ref={formRef}>
-                        <UserForm
-                          initialData={formData}
-                          isEditing={!isCreateMode}
-                          showRoleField={isRoleMode}
-                          title={formTitle}
-                          submitLabel={formSubmitLabel}
-                          loading={loading}
-                          onCancel={() => {
-                            setFormVisible(false);
-                            setFormData({ ...emptyForm });
-                            setEditingId(null);
-                            setFormMode(FORM_MODES.CREATE);
-                          }}
-                          onSubmit={handleFormSubmit}
-                        />
+                        {isSalaryMode ? (
+                          <SalaryForm
+                            user={formData}
+                            title={formTitle}
+                            submitLabel="Maaş Kaydet"
+                            loading={loading}
+                            onCancel={() => {
+                              setFormVisible(false);
+                              setFormData({ ...emptyForm });
+                              setEditingId(null);
+                              setFormMode(FORM_MODES.CREATE);
+                            }}
+                            onSubmit={handleSalarySubmit}
+                          />
+                        ) : (
+                          <UserForm
+                            initialData={formData}
+                            isEditing={!isCreateMode}
+                            showRoleField={isRoleMode}
+                            title={formTitle}
+                            submitLabel={formSubmitLabel}
+                            loading={loading}
+                            onCancel={() => {
+                              setFormVisible(false);
+                              setFormData({ ...emptyForm });
+                              setEditingId(null);
+                              setFormMode(FORM_MODES.CREATE);
+                            }}
+                            onSubmit={handleFormSubmit}
+                          />
+                        )}
                       </div>
                     )}
                   </div>

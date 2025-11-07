@@ -2,7 +2,7 @@ const Navbar = ({ currentUser, onLogout }) => {
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
       <div className="container">
-        <span className="navbar-brand">Kullanici Yonetimi</span>
+        <span className="navbar-brand">Kullanıcı Yönetimi</span>
         <div className="d-flex align-items-center gap-3 text-white">
           {currentUser && (
             <span className="small">
@@ -10,7 +10,7 @@ const Navbar = ({ currentUser, onLogout }) => {
             </span>
           )}
           <button className="btn btn-outline-light btn-sm" onClick={onLogout}>
-            Cikis Yap
+            Çıkış Yap
           </button>
         </div>
       </div>

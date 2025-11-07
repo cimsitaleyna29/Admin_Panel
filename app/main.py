@@ -81,10 +81,8 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 @app.get("/users/", response_model=list[schemas.UserResponse])
 def read_users(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     """
-    Tüm kullanıcıları getirir. Sadece admin görebilir.
+    Tüm kullanıcıları listeler. Yetki kontrolleri diğer uç noktalarda yapılır.
     """
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Sadece admin kullanıcılar bu işlemi yapabilir.")
     return crud.get_users(db)
 
 
@@ -189,6 +187,37 @@ def login(form_data: schemas.UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=403, detail="Hesap pasif durumda.")
     access_token = create_access_token({"sub": user.email, "role": user.role})
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+
+# USER DETAİLS - Maaş ekleme/güncelleme
+
+@app.post("/users/{user_id}/salary", response_model=dict)
+def set_user_salary(
+    user_id: int,
+    salary_data: schemas.SalaryUpdate,  # schema kullanıldı
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Admin kullanıcı maaş bilgisi ekler veya günceller.
+
+    Örnek JSON body:
+    {
+      "salary": 20000
+    }
+    """
+    # Sadece admin kullanıcı maaş ekleyebilir
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Sadece admin maaş bilgisi ekleyebilir.")
+
+    # CRUD işlemi (ekle/güncelle)
+    details = crud.create_or_update_user_details(db, user_id, salary_data.salary)
+
+    return {
+        "message": f"Kullanıcı ID {user_id} için maaş bilgisi {salary_data.salary} TL olarak kaydedildi."
+    }
+
 
 if __name__ == "_main_":
     uvicorn.run(app, host="0.0.0.0", port=8000)

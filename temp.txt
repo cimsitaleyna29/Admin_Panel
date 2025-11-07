@@ -116,16 +116,6 @@ const App = () => {
     loadUsers();
   }, [isAuthenticated]);
 
-  useEffect(() => {
-    if (!success) {
-      return;
-    }
-    const timer = setTimeout(() => {
-      setSuccess("");
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [success]);
-
   const handleLogin = async ({ email, password }) => {
     const trimmedEmail = email.trim();
     const trimmedPassword = password.trim();
@@ -367,7 +357,6 @@ const App = () => {
   const feedbackElement = renderFeedback();
   const isCreateMode = formMode === FORM_MODES.CREATE;
   const isRoleMode = formMode === FORM_MODES.ROLE;
-  const loginEntryLabel = isAdmin ? "Yönetici girişi" : "Kullanıcı girişi";
   const formTitle = isCreateMode
     ? "Yeni Kullanıcı"
     : isRoleMode
@@ -421,7 +410,7 @@ const App = () => {
                           <span>Toplam {users.length} kayıtlı kullanıcı</span>
                           {currentUser?.email && (
                             <span>
-                              {loginEntryLabel}: {currentUser.name} (
+                              Yönetici girişi: {currentUser.name} (
                               {currentUser.email})
                             </span>
                           )}
@@ -433,15 +422,23 @@ const App = () => {
                             {currentUser.name}
                           </span>
                         )}
-                        {canManageSalary && (
-                          <button
-                            type="button"
-                            className="dashboard-secondary"
-                            onClick={() => navigate("/salaries")}
-                          >
-                            Maaş Bilgileri
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          className="dashboard-secondary"
+                          disabled={!canManageSalary}
+                          title={
+                            canManageSalary
+                              ? undefined
+                              : "Sadece admin kullanıcılar maaş bilgilerini yönetebilir."
+                          }
+                          onClick={() => {
+                            if (canManageSalary) {
+                              navigate("/salaries");
+                            }
+                          }}
+                        >
+                          Maaş Bilgileri
+                        </button>
                         <button
                           type="button"
                           className="dashboard-primary"
@@ -461,8 +458,9 @@ const App = () => {
                         users={users}
                         loading={loading}
                         onEdit={handleEditUserForm}
-                        onRole={canManageRoles ? handleRoleForm : undefined}
-                        showRoleAction={canManageRoles}
+                        onRole={handleRoleForm}
+                        showRoleAction
+                        roleActionDisabled={!canManageRoles}
                         onDelete={handleDelete}
                       />
                     </div>
@@ -509,7 +507,7 @@ const App = () => {
                           <span>Toplam {users.length} kayıtlı kullanıcı</span>
                           {currentUser?.email && (
                             <span>
-                              {loginEntryLabel}: {currentUser.name} (
+                              Yönetici girişi: {currentUser.name} (
                               {currentUser.email})
                             </span>
                           )}

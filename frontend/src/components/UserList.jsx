@@ -4,9 +4,7 @@ const UserList = ({
   onEdit,
   onDelete,
   onRole,
-  onSalary,
-  showRoleAction = true,
-  showSalaryAction = true
+  showRoleAction = true
 }) => {
   if (loading && users.length === 0) {
     return (
@@ -60,14 +58,6 @@ const UserList = ({
                     onClick={() => onRole(user)}
                   >
                     Rol Ekle
-                  </button>
-                )}
-                {showSalaryAction && onSalary && (
-                  <button
-                    className="user-action user-action-salary"
-                    onClick={() => onSalary(user)}
-                  >
-                    Maaş Bilgisi
                   </button>
                 )}
                 <button

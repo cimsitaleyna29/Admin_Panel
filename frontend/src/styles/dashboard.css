@@ -74,6 +74,21 @@
   box-shadow: 0 12px 25px rgba(37, 99, 235, 0.25);
 }
 
+.dashboard-toolbar button.dashboard-secondary {
+  background-color: #ffffff;
+  color: #0f172a;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  font-weight: 600;
+  padding: 0.55rem 1.2rem;
+  border-radius: 0.75rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-toolbar button.dashboard-secondary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.15);
+}
+
 .dashboard-feedback {
   margin-bottom: 1.5rem;
 }
@@ -192,16 +207,36 @@
   color: #111827;
 }
 
-.user-action-salary {
-  background-color: #0f766e;
-  color: #ffffff;
-  border-color: #0f766e;
+.salary-manager {
+  padding: 1.5rem;
+  border-radius: 1rem;
 }
 
-.user-action-salary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 18px rgba(15, 118, 110, 0.25);
-  background-color: #115e59;
+.salary-manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.salary-manager-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.salary-manager-table th {
+  background-color: #111827;
+  color: #ffffff;
+}
+
+.salary-manager-table th,
+.salary-manager-table td {
+  vertical-align: middle;
+}
+
+.salary-input {
+  min-width: 140px;
 }
 
 .dashboard-form-modal {
